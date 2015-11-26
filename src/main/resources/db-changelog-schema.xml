@@ -1,0 +1,40 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <preConditions>
+        <dbms type="oracle" />
+        <runningAs username="sys"/>
+    </preConditions>
+
+    <changeSet id="drop-user" author="Kushan" runAlways="true" failOnError="false">
+        <sql>drop user "${database.username}" cascade;</sql>
+    </changeSet>
+
+    <changeSet id="drop-tablespace" author="Kushan" runAlways="true" failOnError="false">
+        <sql>drop tablespace ${database.default.tablespace} including contents and datafiles cascade constraints;
+            drop tablespace ${database.temporary.tablespace} including contents and datafiles cascade constraints;</sql>
+    </changeSet>
+
+    <changeSet id="create-tablespace" author="Kushan" runAlways="true" failOnError="true">
+        <sql>create tablespace tbs  datafile '${database.default.tablespace.datafile}' size 50M extent management local autoallocate;
+            create temporary tablespace tbs_tmp tempfile '${database.temporary.tablespace.tempfile}' size 20M reuse extent management local uniform size 16M;</sql>
+    </changeSet>
+
+    <changeSet id="create-user" author="Kushan" runAlways="true" failOnError="true">
+        <sql>create user ${database.username} identified by ${database.password}
+            default tablespace "${database.default.tablespace}"
+            temporary tablespace "${database.temporary.tablespace}";</sql>
+    </changeSet>
+
+    <changeSet id="grant-roles" author="Kushan" runAlways="true" failOnError="true">
+        <sql>GRANT "RESOURCE" TO "${database.username}";
+            GRANT "CONNECT" TO "${database.username}";
+        </sql>
+    </changeSet>
+
+    <changeSet id="grant-system-privileges" author="Kushan" runAlways="true" failOnError="true">
+        <sql>GRANT CREATE SESSION TO "${database.username}";</sql>
+    </changeSet>
+    
+</databaseChangeLog>
