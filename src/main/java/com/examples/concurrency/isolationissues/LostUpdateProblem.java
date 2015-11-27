@@ -20,7 +20,7 @@ import javax.persistence.Table;
     tx1 ----------------------------------------> 3. commit tx1
                     1. update D1
 
-                                2. update D2
+                                2. update D1
     tx2 -----------------------------------------> 4. rollback tx2
 
  Oracle supports only read committed and serialization isolation levels. So these are not demonstrable in oracle
