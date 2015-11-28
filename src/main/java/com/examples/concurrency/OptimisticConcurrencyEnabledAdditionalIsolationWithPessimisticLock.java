@@ -114,6 +114,7 @@ public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock 
                     User user = (User)session.get(User.class,1);
                     Assert.assertEquals("Initial Commit", user.getName());
                     user.setName("Second Commit");
+                    session.saveOrUpdate(user);
                     tx.commit();
                     session.close();
                 }
