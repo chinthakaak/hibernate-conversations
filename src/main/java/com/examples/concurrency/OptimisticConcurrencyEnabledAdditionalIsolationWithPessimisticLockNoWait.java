@@ -4,7 +4,6 @@ import junit.framework.Assert;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -21,10 +20,10 @@ import javax.persistence.Version;
 /**
  * Created by ka40215 on 11/27/15.
  */
-public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock {
+public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLockNoWait {
 
 
-    public static class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLockTest {
+    public static class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLockNoWaitTest {
         @Test
         public void testUnrepeatableReadInScalarQueries() throws InterruptedException {
             Session session = HibernateUtil.buildSessionFactoryCreate().openSession();
@@ -76,7 +75,7 @@ public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock 
             session2.close();
         }
         @Test
-        public void testFixUnrepeatableReadInScalarQueriesWithPessimisticLock() throws InterruptedException {
+        public void testFixUnrepeatableReadInScalarQueriesWithPessimisticLockNoWait() throws InterruptedException {
             Session session = HibernateUtil.buildSessionFactoryCreate().openSession();
             Transaction tx = session.beginTransaction();
             User user = new User();
@@ -91,13 +90,14 @@ public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock 
                     Transaction tx =  session.beginTransaction();
                     User user = (User)session.get(User.class,1);
                     Assert.assertEquals("Initial Commit", user.getName());
-                    session.lock(user, LockMode.UPGRADE); // pessimistic lock with wait for avoid unrepeatable reads
-                    // select userId from USERS where userId =? and OBJ_VERSION =? for update
-                    System.out.println("select ... for upgrade");
+                    session.lock(user, LockMode.UPGRADE_NOWAIT); // pessimistic lock with no wait for avoid unrepeatable reads
+                    // select userId from USERS where userId =? and OBJ_VERSION =? for update nowait
+                    System.out.println("select ... for upgrade no wait");
                     delay(10);
+//                    System.out.println("10s");
 
-                    String name = (String) session.createQuery("select i.name from OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock$User i" +
-                            " where i.userId = :param")
+                    String name = (String) session.createQuery("select user.name from OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLockNoWait$User user" +
+                            " where user.userId = :param")
                             .setParameter("param", 1)
                             .uniqueResult();
 
@@ -111,6 +111,7 @@ public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock 
                 @Override
                 public void run() {
                     delay(5);
+//                    System.out.println("5s");
                     Session session = HibernateUtil.buildSessionFactoryUpdateIsolation(2).openSession();
                     Transaction tx = session.beginTransaction();
                     User user = (User)session.get(User.class,1);
@@ -133,7 +134,7 @@ public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock 
         public void delay(int interval) {
             try {
                 Thread.sleep(interval * 1000);
-                System.out.println("Sleeping for " + interval + " s");
+                System.out.println("Sleeping for "+interval+" s");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
