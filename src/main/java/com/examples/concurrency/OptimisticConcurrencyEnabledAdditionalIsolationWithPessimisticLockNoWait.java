@@ -7,6 +7,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.exception.LockAcquisitionException;
 import org.junit.Test;
 
 import javax.persistence.Column;
@@ -115,6 +116,19 @@ public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLockN
                     Session session = HibernateUtil.buildSessionFactoryUpdateIsolation(2).openSession();
                     Transaction tx = session.beginTransaction();
                     User user = (User)session.get(User.class,1);
+
+                    boolean lock_succeeded = false;
+                    while (!lock_succeeded){
+                        try {
+                            session.lock(user, LockMode.UPGRADE_NOWAIT);
+                            System.out.println("Lock succeeded");
+                            lock_succeeded = true;
+                        }catch (LockAcquisitionException lockAcquisitionException) {
+                            System.out.println(lockAcquisitionException.getMessage());
+                        }
+                        delay(1);
+                    }
+
                     Assert.assertEquals("Initial Commit", user.getName());
                     user.setName("Second Commit");
                     session.saveOrUpdate(user);

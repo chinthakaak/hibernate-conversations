@@ -114,6 +114,7 @@ public class OptimisticConcurrencyEnabledAdditionalIsolationWithPessimisticLock 
                     Session session = HibernateUtil.buildSessionFactoryUpdateIsolation(2).openSession();
                     Transaction tx = session.beginTransaction();
                     User user = (User)session.get(User.class,1);
+                    session.lock(user, LockMode.UPGRADE);
                     Assert.assertEquals("Initial Commit", user.getName());
                     user.setName("Second Commit");
                     session.saveOrUpdate(user);
